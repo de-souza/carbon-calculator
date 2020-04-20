@@ -6,6 +6,7 @@ Created on Tue Apr  7 15:56:06 2020
 """
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 ##key data 
 distance_lower_bound = np.array([0, 801, 2001, 5501])
@@ -91,3 +92,4 @@ graph = emissions_graph.plot.bar(x='distance data', rot=90, title='Carbon Calcul
 graph.set_xlabel("Distance (km)")
 graph.set_ylabel("Total Emissions (kg CO2e)")
 
+plt.show()
