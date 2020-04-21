@@ -10,8 +10,12 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
 
-##set range & step of distance data (BOTH DATASETS)
-distance_set = np.array(range(500, 15000, 500))
+##set range & step of distance data (BOTH DATASETS) #user-defined
+range_min = 0
+range_max = 20000
+interval = 500 
+
+distance_set = np.array(range(range_min, range_max, interval))
 
 ##START DATASET 1 INPUT##
 distance_lower_bound = np.array([0, 801, 2001, 5501, 10001])
@@ -150,39 +154,27 @@ fbps_2 = pd.DataFrame(fburn_pass_selects_2, columns=['distance data',
 
 
 
+#define emissions calculation function
+def emissions_calc(dataframe):
+    #calculate total fuel burnt 
+    dataframe['fuel_burnt'] = dataframe['distance data'] * dataframe['fuel burn results']
+    dataframe['pass_emissions'] = (dataframe['fuel_burnt'] / dataframe['passenger results']) * kg_co2_kg_fuel
+    #account for re-routing inefficiencies
+    dataframe['pass_emissions'] = (dataframe['pass_emissions'] * 0.1) + dataframe['pass_emissions']
+    ##add lifecycle cost of FUEL
+    dataframe['fuel_lifecycle'] = (dataframe['fuel_burnt'] * fuel_lifecycle) / dataframe['passenger results']
+    #total emissions step 1
+    dataframe['total emissions'] = dataframe['fuel_lifecycle'] + dataframe['pass_emissions']
+    #total emissions step 2 (GHG multiplier)
+    dataframe['total emissions'] = dataframe['total emissions'] *GHG_m
+
+    return dataframe
+
 #EMISSIONS CALCULATIONS #DS1#
-#calculate total fuel burnt 
-fbps['fuel_burnt'] = fbps['distance data'] * fbps['fuel burn results']
-fbps['pass_emissions'] = (fbps['fuel_burnt'] / fbps['passenger results']) * kg_co2_kg_fuel
-
-#account for re-routing inefficiencies
-fbps['pass_emissions'] = (fbps['pass_emissions'] * 0.1) + fbps['pass_emissions']
-
-##add lifecycle cost of FUEL
-fbps['fuel_lifecycle'] = (fbps['fuel_burnt'] * fuel_lifecycle) / fbps['passenger results']
-
-#total emissions step 1
-fbps['total emissions'] = fbps['fuel_lifecycle'] + fbps['pass_emissions']
-
-#total emissions step 2 (GHG multiplier)
-fbps['total emissions'] = fbps['total emissions'] *GHG_m
+fbps = emissions_calc(fbps)
 
 ##EMISSIONS CALCULATIONS #DS2#
-#calculate total fuel burnt
-fbps_2['fuel_burnt'] = fbps_2['distance data'] * fbps_2['fuel burn results']
-fbps_2['pass_emissions'] = (fbps_2['fuel_burnt'] / fbps_2['passenger results']) * kg_co2_kg_fuel_2
-
-#account for re-routing inefficiencies
-fbps_2['pass_emissions'] = (fbps_2['pass_emissions'] * 0.1) + fbps_2['pass_emissions']
-
-##add lifecycle cost of FUEL
-fbps_2['fuel_lifecycle'] = (fbps_2['fuel_burnt'] * fuel_lifecycle_2) / fbps_2['passenger results']
-
-#total emissions step 1
-fbps_2['total emissions'] = fbps_2['fuel_lifecycle'] + fbps_2['pass_emissions']
-
-#total emissions step 2 (GHG multiplier)
-fbps_2['total emissions'] = fbps_2['total emissions'] * GHG_m_2
+fbps_2 = emissions_calc(fbps_2)
 
 ##END EMISSIONS CALCULATIONS##
 
@@ -203,7 +195,7 @@ emissions_graph2_2 = fbps_2[['distance data', '% change']]
 
 
 #using matplotlib
-fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(11,8), dpi=240)
+fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(12.5,8), dpi=250)
 plt.style.use('default')
 
 #graphs organized by axis
@@ -219,9 +211,10 @@ ax[0,0].set_xticklabels(x1, rotation=45, fontsize=7) #x tick labels
 ax[0,0].set_yticklabels(y1, fontsize=7)
 ax[0,0].yaxis.set_major_formatter(FormatStrFormatter('%i'))
 ax[0,0].xaxis.set_major_formatter(FormatStrFormatter('%i'))
-ax[0,0].set_ylim([0,2000])
-ax[0,0].set_xticks(range(0,16000,1000))
-ax[0,0].set_xlim([0,15000])
+ax[0,0].set_yticks(range(0,2400,250))
+ax[0,0].set_ylim([0,2400])
+ax[0,0].set_xticks(range(range_min,range_max,1000))
+ax[0,0].set_xlim([range_min,range_max])
                                   
 x2 = emissions_graph2['distance data']
 y2 = emissions_graph2['% change']
@@ -235,8 +228,8 @@ ax[0,1].set_yticklabels(y1, fontsize=7)
 ax[0,1].yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 ax[0,1].xaxis.set_major_formatter(FormatStrFormatter('%i'))
 ax[0,1].set_ylim([-0.5,3])
-ax[0,1].set_xticks(range(0,16000,1000))
-ax[0,1].set_xlim([0,15000])
+ax[0,1].set_xticks(range(range_min,range_max,1000))
+ax[0,1].set_xlim([range_min,range_max])
 
 # plt.subplots_adjust(wspace=0.5, hspace=0.7)
 
@@ -253,9 +246,10 @@ ax[1,0].set_xticklabels(x1, rotation=45, fontsize=7) #x tick labels
 ax[1,0].set_yticklabels(y1, fontsize=7)
 ax[1,0].yaxis.set_major_formatter(FormatStrFormatter('%i'))
 ax[1,0].xaxis.set_major_formatter(FormatStrFormatter('%i'))
-ax[1,0].set_ylim([0,2000])
-ax[1,0].set_xticks(range(0,16000,1000))
-ax[1,0].set_xlim([0,15000])
+ax[1,0].set_yticks(range(0,2400,250))
+ax[1,0].set_ylim([0,2400])
+ax[1,0].set_xticks(range(range_min,range_max,1000))
+ax[1,0].set_xlim([range_min,range_max])
                                   
 x2_2 = emissions_graph2_2['distance data']
 y2_2 = emissions_graph2_2['% change']
@@ -269,14 +263,11 @@ ax[1,1].set_yticklabels(y1, fontsize=7)
 ax[1,1].yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 ax[1,1].xaxis.set_major_formatter(FormatStrFormatter('%i'))
 ax[1,1].set_ylim([-0.5,3])
-ax[1,1].set_xticks(range(0,16000,1000))
-ax[1,1].set_xlim([0,15000])
+ax[1,1].set_xticks(range(range_min,range_max,1000))
+ax[1,1].set_xlim([range_min,range_max])
 
 plt.subplots_adjust(wspace=0.25, hspace=0.45)
 
-
-#other commands
-# ax[0,0].yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
 
 
